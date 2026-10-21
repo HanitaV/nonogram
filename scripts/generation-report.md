@@ -1,0 +1,48 @@
+# Puzzle generation report
+
+40 puzzles written to src/data/puzzles.ts.
+
+- b01-heart (5x5): unique, line logic only
+- b02-house (5x5): unique, line logic only
+- b03-arrow (5x5): unique, line logic only
+- b04-cross (5x5): unique, line logic only
+- b05-smile (5x5): unique, needs search (2 branches)
+- b06-mushroom (5x5): unique, line logic only
+- b07-hourglass (5x5): unique, line logic only
+- b08-steps (5x5): unique, line logic only
+- b09-target (5x5): unique, line logic only
+- b10-sailboat (5x5): unique, line logic only
+- e01-cat (8x8): unique, needs search (2 branches)
+- e02-umbrella: changed 1 cell(s) from the drawing to make it unique: r5c4
+- e02-umbrella (8x8): unique, line logic only
+- e03-key: changed 1 cell(s) from the drawing to make it unique: r3c2
+- e03-key (8x8): unique, line logic only
+- e04-fish (8x8): unique, line logic only
+- e05-mug (8x8): unique, line logic only
+- e06-pine (8x8): unique, line logic only
+- e07-notes (8x8): unique, line logic only
+- e08-apple (8x8): unique, line logic only
+- e09-rocket (8x8): unique, line logic only
+- e10-anchor (8x8): unique, needs search (2 branches)
+- i01-teapot (10x10): unique, line logic only
+- i02-crown (10x10): unique, line logic only
+- i03-cactus (10x10): unique, line logic only
+- i04-envelope (10x10): unique, line logic only
+- i05-lighthouse (10x10): unique, line logic only
+- i06-butterfly (10x10): unique, line logic only
+- i07-moon-and-star (10x10): unique, needs search (2 branches)
+- i08-light-bulb (10x10): unique, line logic only
+- i09-duck (10x10): unique, line logic only
+- i10-bell (10x10): unique, line logic only
+- a01-castle (15x15): unique, line logic only
+- a02-sitting-cat (15x15): unique, line logic only
+- a03-whale: changed 1 cell(s) from the drawing to make it unique: r1c13
+- a03-whale (15x15): unique, line logic only
+- a04-camera: changed 3 cell(s) from the drawing to make it unique: r9c9, r7c9, r6c5
+- a04-camera (15x15): unique, line logic only
+- a05-ship (15x15): unique, needs search (2 branches)
+- a-study-b5c4a8d9 (15x15): unique, line logic only
+- a-study-494d5bcc (15x15): unique, line logic only
+- a-study-f3afe3f9 (15x15): unique, line logic only
+- a-study-1a0ced82 (15x15): unique, line logic only
+- a-study-60dfbc39 (15x15): unique, line logic only

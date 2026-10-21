@@ -1,0 +1,435 @@
+@import 'tailwindcss';
+@import '@fontsource/ibm-plex-sans/400.css';
+@import '@fontsource/ibm-plex-sans/500.css';
+@import '@fontsource/ibm-plex-sans/600.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/*
+  Tokens. The metaphor is a puzzle book worked in pencil:
+  paper, graphite ink, a highlighter for where you are looking,
+  and a red pen for mistakes. Each colour has one job.
+*/
+:root {
+  --paper: #f5f4ef;
+  --sheet: #ffffff;
+  --ink: #23241f;
+  --pencil: #6c6e66;
+  --rule: #c9cac1;
+  --rule-strong: #8e9087;
+  --fill: #2a2c27;
+  --mark: #8e9087;
+  --highlight: #f2d65e;
+  --highlight-soft: rgb(242 214 94 / 0.28);
+  --redpen: #b0412b;
+  --redpen-soft: rgb(176 65 43 / 0.12);
+  --solved: #3f6f53;
+  --shade: rgb(35 36 31 / 0.045);
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --paper: #1c1d1a;
+  --sheet: #252622;
+  --ink: #e8e7e0;
+  --pencil: #a2a49b;
+  --rule: #3e403a;
+  --rule-strong: #6c6e66;
+  --fill: #e2e0d6;
+  --mark: #7d7f76;
+  --highlight: #d8bd4a;
+  --highlight-soft: rgb(216 189 74 / 0.16);
+  --redpen: #e07a62;
+  --redpen-soft: rgb(224 122 98 / 0.14);
+  --solved: #86b897;
+  --shade: rgb(255 255 255 / 0.04);
+  color-scheme: dark;
+}
+
+@theme {
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --color-paper: var(--paper);
+  --color-sheet: var(--sheet);
+  --color-ink: var(--ink);
+  --color-pencil: var(--pencil);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-fill: var(--fill);
+  --color-highlight: var(--highlight);
+  --color-highlight-soft: var(--highlight-soft);
+  --color-redpen: var(--redpen);
+  --color-redpen-soft: var(--redpen-soft);
+  --color-solved: var(--solved);
+  --color-shade: var(--shade);
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  margin: 0;
+  background: var(--paper);
+  min-height: 100dvh;
+  font-size: var(--text-base);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+html.theme-anim,
+html.theme-anim * {
+  transition:
+    background-color 200ms ease,
+    color 200ms ease,
+    border-color 200ms ease !important;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--highlight-soft);
+}
+
+/* Buttons: two kinds. Plain text-and-icon tools, and one solid ink button for the primary action. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.25rem;
+  padding: 0 0.7rem;
+  border-radius: 4px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--ink);
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.btn:hover:not(:disabled) {
+  background: var(--shade);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  color: var(--pencil);
+  opacity: 0.5;
+  cursor: default;
+}
+.btn-line {
+  border-color: var(--rule);
+}
+.btn-line:hover:not(:disabled) {
+  border-color: var(--rule-strong);
+}
+.btn-ink {
+  background: var(--ink);
+  color: var(--paper);
+}
+.btn-ink:hover:not(:disabled) {
+  background: var(--ink);
+  opacity: 0.88;
+}
+.btn kbd {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--pencil);
+  margin-left: auto;
+  padding-left: 0.75rem;
+}
+
+.field {
+  border: 1px solid var(--rule);
+  background: var(--sheet);
+  color: var(--ink);
+  border-radius: 3px;
+  padding: 0.4rem 0.55rem;
+  font-size: var(--text-sm);
+}
+.field:focus-visible {
+  outline-offset: 0;
+}
+
+/* Segmented control (radio group) */
+.seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  max-width: 100%;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 2px;
+  gap: 2px;
+}
+.seg label {
+  position: relative;
+}
+.seg input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  cursor: pointer;
+}
+.seg span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 2px;
+  font-size: var(--text-sm);
+  color: var(--pencil);
+}
+.seg input:checked + span {
+  background: var(--ink);
+  color: var(--paper);
+}
+.seg input:focus-visible + span {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* Board */
+.board-scroll {
+  overflow: auto;
+  overscroll-behavior: contain;
+  max-width: 100%;
+}
+.board {
+  display: grid;
+  width: max-content;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.strip-top,
+.strip-left,
+.corner {
+  background: var(--paper);
+  position: sticky;
+  z-index: 2;
+  touch-action: pan-x pan-y;
+}
+.strip-top {
+  top: 0;
+  display: grid;
+  align-items: end;
+  padding-left: 2px;
+}
+.strip-left {
+  left: 0;
+  display: grid;
+  padding-top: 2px;
+}
+.corner {
+  top: 0;
+  left: 0;
+  z-index: 3;
+}
+.clue-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+  padding-bottom: 4px;
+}
+.clue-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-right: 7px;
+  gap: 0.6ch;
+}
+.clue-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  color: var(--ink);
+}
+.clue-done .clue-num {
+  color: var(--pencil);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  opacity: 0.55;
+}
+.clue-bad .clue-num {
+  color: var(--redpen);
+}
+.clue-active {
+  background: var(--highlight-soft) !important;
+}
+.cells {
+  display: grid;
+  border: 2px solid var(--ink);
+  background: var(--sheet);
+  touch-action: none;
+  position: relative;
+}
+.cell {
+  position: relative;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  box-sizing: border-box;
+}
+.cell.r5 {
+  border-right-color: var(--rule-strong);
+}
+.cell.b5 {
+  border-bottom-color: var(--rule-strong);
+}
+.cell.lastc {
+  border-right: 0;
+}
+.cell.lastr {
+  border-bottom: 0;
+}
+.cell.lineon {
+  background: var(--highlight-soft);
+}
+.cell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transition: transform 90ms ease-out, background-color 90ms;
+}
+.cell.f::after {
+  background: var(--fill);
+  inset: 1px;
+}
+.cell.x::before,
+.cell.x::after {
+  content: '';
+  position: absolute;
+  inset: auto;
+  left: 50%;
+  top: 50%;
+  width: 46%;
+  height: 1.5px;
+  background: var(--mark);
+}
+.cell.x::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.cell.x::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+.cell.cursor {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+  z-index: 1;
+}
+.cell.cursor.f {
+  outline-color: var(--highlight);
+}
+.cell.tag-hint {
+  box-shadow: inset 0 0 0 3px var(--highlight);
+}
+.cell.tag-mistake {
+  box-shadow: inset 0 0 0 2px var(--redpen);
+  background: var(--redpen-soft);
+}
+.cell.tag-branch {
+  box-shadow: inset 0 0 0 3px var(--redpen);
+}
+.cell.tag-forced {
+  box-shadow: inset 0 0 0 3px var(--highlight);
+}
+.cell.tag-diff {
+  background: var(--redpen-soft);
+  box-shadow: inset 0 0 0 1px var(--redpen);
+}
+
+/* Solved: the grid lines step back and the picture remains. */
+.solved .cell {
+  border-color: transparent !important;
+  transition: border-color 600ms ease 120ms;
+}
+.solved .cell.f::after {
+  inset: 0;
+  transition: inset 400ms ease 120ms;
+}
+.solved .cell.x::before,
+.solved .cell.x::after {
+  opacity: 0;
+  transition: opacity 300ms;
+}
+.solved.cells {
+  border-color: var(--rule);
+  transition: border-color 600ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion='full']) * {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}
+[data-motion='reduce'] * {
+  transition-duration: 0ms !important;
+  animation-duration: 0ms !important;
+}
+
+.prose-learn p {
+  max-width: 68ch;
+  margin: 0 0 0.85rem;
+}
+.prose-learn ul,
+.prose-learn ol {
+  max-width: 66ch;
+  padding-left: 1.2rem;
+  margin: 0 0 0.85rem;
+}
+.prose-learn ul {
+  list-style: disc;
+}
+.prose-learn ol {
+  list-style: decimal;
+}
+.prose-learn li {
+  margin-bottom: 0.3rem;
+}
+.prose-learn h2 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin: 0 0 0.6rem;
+}
+.prose-learn h3 {
+  font-size: var(--text-base);
+  font-weight: 600;
+  margin: 1.2rem 0 0.4rem;
+}
+.prose-learn code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+  margin: 0.6rem 0 1rem !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
