@@ -1,6 +1,6 @@
 import { EMPTY, FILLED, UNKNOWN, type Clues, type Grid } from '../types/puzzle';
 import { cluesEqual, lineClue } from './clues';
-import { solveLine } from './patterns';
+import { countPlacements } from './patterns';
 import { lineCells } from './solver';
 
 export type BoardState = 'incomplete' | 'contradiction' | 'solved';
@@ -44,7 +44,7 @@ export function checkBoard(clues: Clues, board: Grid): BoardCheck {
     const clue = isRow ? clues.rows[l]! : clues.cols[l - clues.height]!;
     const values = lineValues(board, lineCells(clues, l));
     const satisfied = cluesEqual(lineClue(values, isFilled), clue);
-    const impossible = !solveLine(clue, values).ok;
+    const impossible = countPlacements(clue, values) === 0;
     if (!satisfied) allSatisfied = false;
     if (impossible) anyImpossible = true;
     (isRow ? rows : cols).push({ satisfied, impossible });

@@ -7,6 +7,7 @@ import { Menu } from '../../components/ui/Menu';
 import { LIBRARY } from '../../data/puzzles';
 import { formatClue } from '../../engine/clues';
 import type { Hint } from '../../engine/hints';
+import { mistakesAgainst } from '../../engine/validation';
 import { difficultyLabel, formatTime, plural } from '../../lib/format';
 import { addPuzzle, nextLibraryPuzzle, randomLibraryPuzzle, storedFromGrid } from '../../lib/library';
 import { puzzleLabel, resolvePuzzle } from '../../lib/puzzles';
@@ -61,7 +62,13 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
   const revealed = game.status === 'revealed';
   const finished = solved || revealed;
   const showName = finished || puzzle.source === 'custom';
-  const uniqueRef = puzzle.unique ? solutionGrid(puzzle) : null;
+  const uniqueRef = useMemo(() => puzzle.unique ? solutionGrid(puzzle) : null, [puzzle]);
+  const mistakes = useMemo(() => uniqueRef && !finished ? mistakesAgainst(game.board, uniqueRef) : [], [game.board, uniqueRef, finished]);
+  const boardTags = useMemo(() => {
+    const tags = new Map(note?.tags);
+    mistakes.forEach((index) => tags.set(index, 'mistake'));
+    return tags;
+  }, [note?.tags, mistakes]);
 
   useEffect(() => {
     const ch = channel.current;
@@ -119,7 +126,7 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
     const r = await run('check', () => channel.current!.solve(puzzle, { initial: game.board, maxSolutions: 1, stepLimit: 400_000 }));
     if (!r) return;
     if (r.status === 'none') {
-      const mistakes = uniqueRef ? mistakeCells(game.board, uniqueRef) : [];
+      const mistakes = uniqueRef ? mistakesAgainst(game.board, uniqueRef) : [];
       setNote({
         tone: 'warn',
         body: 'Từng hàng/cột vẫn hợp lệ riêng lẻ, nhưng không có nghiệm hoàn chỉnh phù hợp với bảng. Một bước trước đó đã sai.',
@@ -317,8 +324,8 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
   );
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] px-4 pb-28 pt-5 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-x-12 lg:pb-12 lg:pt-8">
-      <section aria-labelledby="puzzle-title" className="min-w-0">
+    <div className="play-workspace mx-auto w-full max-w-[1200px] px-4 pb-28 pt-5 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-x-8 lg:pb-12 lg:pt-8">
+      <section aria-labelledby="puzzle-title" className="puzzle-sheet min-w-0">
         <header className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
           <div>
             <h1 id="puzzle-title" className="text-xl font-semibold leading-tight">
@@ -340,6 +347,7 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
           </div>
         </header>
 
+        <div className="puzzle-canvas">
         <Board
           clues={puzzle}
           board={game.board}
@@ -348,7 +356,7 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
           onStroke={game.stroke}
           onPaint={settings.sound ? playTick : undefined}
           lineStatus={game.check}
-          tags={note?.tags ?? null}
+          tags={boardTags}
           activeLine={note?.line ?? null}
           solved={finished}
           axisLock={settings.axisLock}
@@ -359,6 +367,23 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
           center
           label={`${title}, ${puzzle.width} × ${puzzle.height}`}
         />
+        </div>
+
+        {!finished && (
+          <div className={`mistake-report ${mistakes.length ? 'has-mistakes' : ''}`} role="status" aria-live="polite" aria-atomic="true">
+            <div className="flex items-center justify-between gap-3">
+              <strong>{mistakes.length ? `${mistakes.length} ô đang sai` : 'Báo cáo ô sai'}</strong>
+              <span className="text-xs">{uniqueRef ? 'Kiểm tra tức thì' : 'Theo chỉ dẫn'}</span>
+            </div>
+            <p className="mt-1 text-sm">
+              {mistakes.length
+                ? `${mistakes.slice(0, 4).map((index) => cellName(puzzle, index)).join('; ')}${mistakes.length > 4 ? `; và ${mistakes.length - 4} ô khác` : ''}. Nhấn lại để xóa hoặc hoàn tác.`
+                : uniqueRef ? 'Chưa phát hiện ô sai. Các ô sai sẽ được đánh dấu đỏ ngay khi bạn bấm.'
+                : game.check.state === 'contradiction' ? 'Có hàng hoặc cột mâu thuẫn. Nhấn Kiểm tra để xem chi tiết.'
+                : 'Câu đố chưa xác nhận nghiệm duy nhất. Dùng Kiểm tra để kiểm tra các bước đã đi.'}
+            </p>
+          </div>
+        )}
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
           <p className="max-w-[60ch] text-sm text-pencil">
@@ -392,8 +417,9 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
       </section>
 
       {/* Desktop rail */}
-      <aside className="hidden lg:block" aria-label="Điều khiển trò chơi">
+      <aside className="game-rail hidden lg:block" aria-label="Điều khiển trò chơi">
         <div className="sticky top-6 space-y-6">
+          <h2 className="text-base font-semibold">Lượt chơi của bạn</h2>
           <div>
             <p className="font-mono text-2xl leading-none tnum" aria-label={`Thời gian ${formatTime(game.elapsedMs)}`}>
               {formatTime(game.elapsedMs)}
@@ -408,7 +434,7 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
               </span>
             </div>
             <div className="mt-1.5 h-[3px] bg-rule" role="progressbar" aria-label="Số ô đã tô" aria-valuenow={game.check.filled} aria-valuemin={0} aria-valuemax={game.check.target}>
-              <div className="h-full bg-ink transition-[width]" style={{ width: `${progress * 100}%` }} />
+              <div className="h-full bg-solved transition-[width]" style={{ width: `${progress * 100}%` }} />
             </div>
           </div>
 
@@ -450,7 +476,7 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
       {/* Mobile toolbar, within thumb reach */}
       <nav
         aria-label="Điều khiển trò chơi"
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-rule bg-paper/95 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-[2px] lg:hidden"
+        className="mobile-tools fixed inset-x-0 bottom-0 z-20 border-t border-rule bg-paper px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 lg:hidden"
       >
         <div className="mx-auto flex max-w-xl items-center justify-between gap-1">
           {finished ? (
@@ -489,15 +515,6 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
       </nav>
     </div>
   );
-}
-
-function mistakeCells(board: Uint8Array, solution: Uint8Array): number[] {
-  const out: number[] = [];
-  for (let i = 0; i < board.length; i++) {
-    if (board[i] === FILLED && solution[i] !== FILLED) out.push(i);
-    if (board[i] === EMPTY && solution[i] === FILLED) out.push(i);
-  }
-  return out;
 }
 
 function describeHint(p: Puzzle, h: Hint, apply: (cells: number[], values: number[]) => void, undo: () => void): Note {

@@ -1,9 +1,10 @@
 import { cluesEqual, cluesFromGrid, gridFromSolution } from '../engine/clues';
 import type { Puzzle } from '../types/puzzle';
 import { isValidSolution } from './storage';
+import { MAX_PUZZLE_SIZE } from './puzzleLimits';
 
 export const EXPORT_FORMAT = 'nonogram-studio/puzzle';
-export const MAX_SIZE = 30;
+export const MAX_SIZE = MAX_PUZZLE_SIZE;
 
 export interface PuzzleFile {
   format: typeof EXPORT_FORMAT;

@@ -7,6 +7,7 @@ import { formatClue, parseClue, validateClues } from '../../engine/clues';
 import type { SolveResult, SolverEvent } from '../../engine/solver';
 import { plural } from '../../lib/format';
 import { resolvePuzzle } from '../../lib/puzzles';
+import { MAX_PUZZLE_SIZE } from '../../lib/puzzleLimits';
 import { CancelledError, SolverChannel } from '../../lib/solverClient';
 import { FILLED, type Axis, type Clues } from '../../types/puzzle';
 
@@ -26,7 +27,7 @@ const examples: Preset[] = [
   { label: 'Ví dụ: vô nghiệm', width: 5, height: 5, rows: '1 1\n1 2\n1\n1 1\n1 1', cols: '2\n3\n1 1\n1\n1 1' },
 ];
 
-const MAX = 30;
+const MAX = MAX_PUZZLE_SIZE;
 const EVENT_LIMIT = 40_000;
 
 function describe(e: SolverEvent, clues: Clues): string {

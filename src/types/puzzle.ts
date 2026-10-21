@@ -9,7 +9,7 @@ export type Clue = number[];
 
 export type Axis = 'row' | 'col';
 
-export type Difficulty = 'beginner' | 'easy' | 'intermediate' | 'advanced' | 'custom';
+export type Difficulty = 'beginner' | 'easy' | 'intermediate' | 'advanced' | 'boss' | 'custom';
 
 export interface Clues {
   width: number;

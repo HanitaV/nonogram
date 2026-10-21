@@ -12,7 +12,7 @@ import { decodeBoard, type GameRecord } from '../../lib/storage';
 import type { Difficulty, Puzzle } from '../../types/puzzle';
 
 type StatusFilter = 'all' | 'new' | 'playing' | 'solved';
-const tiers: Difficulty[] = ['beginner', 'easy', 'intermediate', 'advanced'];
+const tiers: Difficulty[] = ['beginner', 'easy', 'intermediate', 'advanced', 'boss'];
 
 function statusOf(rec: GameRecord | undefined): Exclude<StatusFilter, 'all'> {
   if (!rec) return 'new';
@@ -94,7 +94,7 @@ export function LibraryView() {
         <div>
           <h1 className="text-xl font-semibold">Thư viện</h1>
           <p className="mt-0.5 text-sm text-pencil">
-            {LIBRARY.length} câu đố, mỗi câu có đúng một nghiệm. Bạn đã giải {solvedCount}. Tên sẽ hiện khi giải xong.
+            {LIBRARY.length} câu đố, gồm 40 màn thường và boss cuối 150 × 150. Bạn đã giải {solvedCount}. Tên sẽ hiện khi giải xong.
           </p>
         </div>
         <button type="button" className="btn btn-line" onClick={() => navigate({ view: 'play', id: randomLibraryPuzzle(save, null) })}>

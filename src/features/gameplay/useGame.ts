@@ -3,7 +3,7 @@ import { useStore } from '../../app/store';
 import { gridFromSolution, lineClue } from '../../engine/clues';
 import { diffBoards, emptyHistory, record, redo as redoH, undo as undoH, type CellChange, type History } from '../../engine/history';
 import { lineCells } from '../../engine/solver';
-import { checkBoard } from '../../engine/validation';
+import { checkBoard, isSolution } from '../../engine/validation';
 import { playSolved } from '../../lib/sound';
 import { decodeBoard, encodeBoard, type GameRecord, type GameStatus } from '../../lib/storage';
 import { EMPTY, FILLED, UNKNOWN, type Puzzle } from '../../types/puzzle';
@@ -44,6 +44,12 @@ export function useGame(puzzle: Puzzle): Game {
   const [status, setStatus] = useState<GameStatus>(rec?.status ?? 'playing');
   const [elapsedMs, setElapsed] = useState(rec?.elapsedMs ?? 0);
   const [newBest, setNewBest] = useState(false);
+  // Event handlers may run again before React renders the last committed move.
+  const boardRef = useRef(board);
+  const historyRef = useRef(history);
+  const statusRef = useRef(status);
+  const replaceBoard = useCallback((next: Uint8Array) => { boardRef.current = next; setBoard(next); }, []);
+  const replaceHistory = useCallback((next: History) => { historyRef.current = next; setHistory(next); }, []);
   const elapsedRef = useRef(elapsedMs);
   const started = useRef((rec?.elapsedMs ?? 0) > 0 || board.some((v) => v !== UNKNOWN));
   const persist = useCallback(
@@ -95,13 +101,13 @@ export function useGame(puzzle: Puzzle): Game {
 
   const finishIfSolved = useCallback(
     (next: Uint8Array) => {
-      const c = checkBoard(puzzle, next);
-      if (c.state !== 'solved') return false;
+      if (!isSolution(puzzle, next)) return false;
       const time = Math.round(elapsedRef.current);
       const prevBest = save.games[puzzle.id]?.bestMs ?? null;
       const best = prevBest === null || time < prevBest ? time : prevBest;
       setNewBest(prevBest !== null && time < prevBest);
       setStatus('solved');
+      statusRef.current = 'solved';
       persist({
         board: encodeBoard(next),
         status: 'solved',
@@ -134,79 +140,82 @@ export function useGame(puzzle: Puzzle): Game {
 
   const commit = useCallback(
     (next: Uint8Array, changes: CellChange[]) => {
-      if (status !== 'playing') return;
+      if (statusRef.current !== 'playing') return;
       started.current = true;
       let final = next;
       let all = changes;
       if (settings.autoCross) {
         final = autoCross(next);
-        all = diffBoards(board, final);
+        all = diffBoards(boardRef.current, final);
       }
-      setBoard(final);
-      setHistory((h) => record(h, all));
+      if (all.length === 0) return;
+      replaceBoard(final);
+      replaceHistory(record(historyRef.current, all));
       if (!finishIfSolved(final)) persist({ board: encodeBoard(final), elapsedMs: elapsedRef.current });
     },
-    [status, settings.autoCross, autoCross, board, finishIfSolved, persist],
+    [settings.autoCross, autoCross, finishIfSolved, persist, replaceBoard, replaceHistory],
   );
 
   const stroke = useCallback(
     (changes: CellChange[]) => {
-      const next = board.slice();
+      const next = boardRef.current.slice();
       for (const ch of changes) next[ch.index] = ch.to;
-      commit(next, changes);
+      commit(next, diffBoards(boardRef.current, next));
     },
-    [board, commit],
+    [commit],
   );
 
   const apply = useCallback(
     (cells: number[], values: number[]) => {
-      const next = board.slice();
+      const next = boardRef.current.slice();
       cells.forEach((c, i) => (next[c] = values[i]!));
-      commit(next, diffBoards(board, next));
+      commit(next, diffBoards(boardRef.current, next));
     },
-    [board, commit],
+    [commit],
   );
 
   const undo = useCallback(() => {
-    if (status !== 'playing') return;
-    const r = undoH(history, board);
+    if (statusRef.current !== 'playing') return;
+    const r = undoH(historyRef.current, boardRef.current);
     if (!r) return;
-    setHistory(r.history);
-    setBoard(r.board);
+    replaceHistory(r.history);
+    replaceBoard(r.board);
     persist({ board: encodeBoard(r.board) });
-  }, [history, board, persist, status]);
+  }, [persist, replaceBoard, replaceHistory]);
 
   const redo = useCallback(() => {
-    if (status !== 'playing') return;
-    const r = redoH(history, board);
+    if (statusRef.current !== 'playing') return;
+    const r = redoH(historyRef.current, boardRef.current);
     if (!r) return;
-    setHistory(r.history);
-    setBoard(r.board);
+    replaceHistory(r.history);
+    replaceBoard(r.board);
     if (!finishIfSolved(r.board)) persist({ board: encodeBoard(r.board) });
-  }, [history, board, persist, status, finishIfSolved]);
+  }, [persist, finishIfSolved, replaceBoard, replaceHistory]);
 
   const reset = useCallback(() => {
     const empty = new Uint8Array(puzzle.width * puzzle.height);
-    setBoard(empty);
-    setHistory(emptyHistory());
+    replaceBoard(empty);
+    replaceHistory(emptyHistory());
+    statusRef.current = 'playing';
     setStatus('playing');
     setNewBest(false);
     elapsedRef.current = 0;
     setElapsed(0);
     started.current = false;
     persist({ board: encodeBoard(empty), status: 'playing', elapsedMs: 0 });
-  }, [puzzle, persist]);
+  }, [puzzle, persist, replaceBoard, replaceHistory]);
 
   const reveal = useCallback(
     (solution: Uint8Array) => {
       const b = new Uint8Array(solution.length);
       for (let i = 0; i < b.length; i++) b[i] = solution[i] === FILLED ? FILLED : EMPTY;
-      setBoard(b);
-      setHistory(emptyHistory());
+      replaceBoard(b);
+      replaceHistory(emptyHistory());
+      statusRef.current = 'revealed';
       setStatus('revealed');
       persist({ board: encodeBoard(b), status: 'revealed', elapsedMs: elapsedRef.current });
     },
-    [persist],
+    [persist, replaceBoard, replaceHistory],
   );
 
   return {

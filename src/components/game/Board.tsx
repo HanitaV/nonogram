@@ -80,6 +80,8 @@ export function Board(props: BoardProps) {
   const [preview, setPreview] = useState<Uint8Array | null>(null);
   const stroke = useRef<Stroke | null>(null);
   const previewRef = useRef<Uint8Array | null>(null);
+  const committedRef = useRef(board);
+  useLayoutEffect(() => { committedRef.current = board; }, [board]);
   const showPreview = (b: Uint8Array | null) => {
     previewRef.current = b;
     setPreview(b);
@@ -192,13 +194,14 @@ export function Board(props: BoardProps) {
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (mode === 'view' || !onStroke) return;
+    if (stroke.current) return;
     if (e.button !== 0 && e.button !== 2) return;
     const at = cellAt(e.clientX, e.clientY, false);
     if (!at) return;
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     const idx = at.r * W + at.c;
-    const current = board[idx]!;
+    const current = committedRef.current[idx]!;
     const t: Tool = e.button === 2 || (e.pointerType === 'mouse' && (e.ctrlKey || e.altKey)) ? 'mark' : tool;
     const to = nextValue(mode, current, t);
     const s: Stroke = {
@@ -211,7 +214,7 @@ export function Board(props: BoardProps) {
       changes: new Map([[idx, { index: idx, from: current, to }]]),
     };
     stroke.current = s;
-    const next = board.slice();
+    const next = committedRef.current.slice();
     next[idx] = to;
     showPreview(next);
     onPaint?.();
@@ -222,6 +225,7 @@ export function Board(props: BoardProps) {
     if (s && s.pointerId === e.pointerId) {
       const at = cellAt(e.clientX, e.clientY, true);
       if (!at) return;
+      if (at.r === s.last.r && at.c === s.last.c) return;
       showPreview(paintTo(s, at, previewRef.current ?? board));
       return;
     }
@@ -234,6 +238,10 @@ export function Board(props: BoardProps) {
   const endStroke = (e: PointerEvent<HTMLDivElement>) => {
     const s = stroke.current;
     if (!s || s.pointerId !== e.pointerId) return;
+    // The final pointer position can arrive without a preceding pointermove.
+    const at = e.type === 'pointerup' ? cellAt(e.clientX, e.clientY, true) : null;
+    const final = at ? paintTo(s, at, previewRef.current ?? committedRef.current) : previewRef.current;
+    if (final) committedRef.current = final;
     stroke.current = null;
     showPreview(null);
     if (s.changes.size > 0) onStroke?.([...s.changes.values()]);
@@ -276,7 +284,7 @@ export function Board(props: BoardProps) {
     let to: number | null = null;
     if (e.key === ' ' || e.key === 'Enter' || e.key.toLowerCase() === 'f') to = nextValue(mode, board[idx]!, 'fill');
     else if ((e.key.toLowerCase() === 'x' || e.key === '.') && mode === 'play') to = nextValue(mode, board[idx]!, 'mark');
-    else if (e.key === 'Backspace' || e.key === 'Xóa' || e.key === '0') to = UNKNOWN;
+    else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') to = UNKNOWN;
     if (to === null) return;
     e.preventDefault();
     setCursor(cur);
@@ -338,7 +346,7 @@ export function Board(props: BoardProps) {
 
   return (
     <div ref={wrapRef} className="w-full min-w-0">
-      <div className="board-scroll" style={{ maxHeight: zoom > 1 ? `${Math.round(avail.h * heightBudget + cg)}px` : undefined }}>
+      <div className="board-scroll" style={{ maxHeight: zoom > 1 || H * cell > avail.h * heightBudget ? `${Math.round(avail.h * heightBudget)}px` : undefined }}>
         <div
           className={`board${center ? ' mx-auto' : ''}`}
           style={{ gridTemplateColumns: `${rg}px auto`, gridTemplateRows: `${cg}px auto`, fontSize: fs }}
@@ -387,6 +395,7 @@ export function Board(props: BoardProps) {
             onPointerMove={onPointerMove}
             onPointerUp={endStroke}
             onPointerCancel={endStroke}
+            onLostPointerCapture={endStroke}
             onPointerLeave={() => setHover(null)}
             onContextMenu={(e) => e.preventDefault()}
             onKeyDown={onKeyDown}

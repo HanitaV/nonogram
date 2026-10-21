@@ -12,6 +12,7 @@ export const difficultyLabel: Record<string, string> = {
   easy: 'Dễ',
   intermediate: 'Trung bình',
   advanced: 'Nâng cao',
+  boss: 'Boss cuối',
   custom: 'Tùy chỉnh',
 };
 

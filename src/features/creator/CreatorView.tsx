@@ -3,17 +3,20 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { navigate } from '../../app/router';
 import { useStore } from '../../app/store';
 import { Board, type CellTag } from '../../components/game/Board';
+import { Thumbnail } from '../../components/game/Thumbnail';
 import { cluesFromGrid, gridFromSolution, solutionFromGrid } from '../../engine/clues';
 import { emptyHistory, record, redo as redoH, undo as undoH, diffBoards, type CellChange } from '../../engine/history';
 import type { SolveResult } from '../../engine/solver';
 import { addPuzzle, newId } from '../../lib/library';
 import { parsePuzzleFile, toPuzzleFile } from '../../lib/puzzleIO';
 import { encodeShare } from '../../lib/share';
+import { PUZZLE_SIZES } from '../../lib/puzzleLimits';
+import { ImageImport } from './ImageImport';
 import { CancelledError, SolverChannel } from '../../lib/solverClient';
 import type { StoredPuzzle } from '../../lib/storage';
 import { FILLED, UNKNOWN } from '../../types/puzzle';
 
-const SIZES = [5, 8, 10, 12, 15, 20, 25];
+const SIZES = PUZZLE_SIZES;
 
 /** In the editor a cell is FILLED or UNKNOWN (blank). */
 function toSolutionGrid(drawing: Uint8Array): Uint8Array {
@@ -35,6 +38,7 @@ export function CreatorView({ id }: { id: string | null }) {
   const [checking, setChecking] = useState(false);
   const [message, setMessage] = useState<{ tone: 'plain' | 'warn' | 'good'; text: string } | null>(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [showClues, setShowClues] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
   const channel = useRef<SolverChannel | null>(null);
   channel.current ??= new SolverChannel();
@@ -139,6 +143,7 @@ export function CreatorView({ id }: { id: string | null }) {
     setName(r.name);
     setWidth(r.width);
     setHeight(r.height);
+    setShowClues(r.width <= 40 && r.height <= 40);
     setDrawing(gridFromSolution(r.solution).grid.map((v) => (v === FILLED ? FILLED : UNKNOWN)));
     setHistory(emptyHistory());
     changed();
@@ -193,6 +198,15 @@ export function CreatorView({ id }: { id: string | null }) {
 
       <div className="mt-6 grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <section className="min-w-0" aria-label="Bản vẽ">
+          {Math.max(width, height) > 40 && (
+            <div className="mb-4 flex flex-wrap items-center gap-4">
+              <Thumbnail width={width} height={height} cells={drawing} size={180} />
+              <p className="max-w-[30ch] text-sm text-pencil">Toàn cảnh {width} × {height} ô. Cuộn bảng bên dưới để chỉnh từng ô.</p>
+            </div>
+          )}
+          <label className="mb-3 flex items-center gap-2 text-sm text-pencil">
+            <input type="checkbox" checked={showClues} onChange={(e) => setShowClues(e.target.checked)} /> Hiện chỉ dẫn hàng/cột
+          </label>
           <Board
             clues={clues}
             board={drawing}
@@ -203,6 +217,7 @@ export function CreatorView({ id }: { id: string | null }) {
             crosshair={save.settings.crosshair}
             heightBudget={0.66}
             maxCell={34}
+            showClues={showClues}
             label={`Bản vẽ, ${width} × ${height}`}
           />
           <p className="mt-3 text-sm text-pencil">
@@ -219,7 +234,7 @@ export function CreatorView({ id }: { id: string | null }) {
             <label className="text-sm">
               <span className="block text-pencil">Chiều rộng</span>
               <select className="field mt-1" value={width} onChange={(e) => resize(Number(e.target.value), height)}>
-                {SIZES.map((s) => (
+                {[...new Set([...SIZES, width])].sort((a, b) => a - b).map((s) => (
                   <option key={s}>{s}</option>
                 ))}
               </select>
@@ -227,12 +242,24 @@ export function CreatorView({ id }: { id: string | null }) {
             <label className="text-sm">
               <span className="block text-pencil">Chiều cao</span>
               <select className="field mt-1" value={height} onChange={(e) => resize(width, Number(e.target.value))}>
-                {SIZES.map((s) => (
+                {[...new Set([...SIZES, height])].sort((a, b) => a - b).map((s) => (
                   <option key={s}>{s}</option>
                 ))}
               </select>
             </label>
           </div>
+          <p className="text-sm text-pencil">Tối đa 200 × 200 ô. Tăng số ô để giữ chi tiết khi nhập ảnh; đổi kích thước ở đây chỉ mở rộng hoặc cắt lưới.</p>
+          <ImageImport onApply={(next, w, h, imageName) => {
+            setPuzzleId(null);
+            setName(imageName);
+            setWidth(w);
+            setHeight(h);
+            setDrawing(next);
+            setHistory(emptyHistory());
+            setShowClues(w <= 40 && h <= 40);
+            changed();
+            setMessage({ tone: 'good', text: `Đã chuyển ảnh thành lưới ${w} × ${h}. Hãy lưu hoặc xuất JSON để giữ bản vẽ.` });
+          }} />
           <div className="-mx-2.5 flex flex-wrap">
             <button type="button" className="btn" disabled={history.past.length === 0} onClick={() => { const r = undoH(history, drawing); if (r) { setHistory(r.history); setDrawing(r.board); changed(); } }}>
               <Undo2 size={16} aria-hidden="true" /> Hoàn tác

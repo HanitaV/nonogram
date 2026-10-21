@@ -29,7 +29,7 @@ export function encodeShare(p: { width: number; height: number; solution: string
 }
 
 export function decodeShare(code: string): { width: number; height: number; solution: string[]; name: string } | null {
-  const m = /^(\d{1,2})x(\d{1,2})\.([A-Za-z0-9_-]+)(?:\.([A-Za-z0-9_-]*))?$/.exec(code);
+  const m = /^(\d{1,3})x(\d{1,3})\.([A-Za-z0-9_-]+)(?:\.([A-Za-z0-9_-]*))?$/.exec(code);
   if (!m) return null;
   const width = Number(m[1]);
   const height = Number(m[2]);

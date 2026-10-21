@@ -6,6 +6,8 @@
  * A copy of unreadable data is kept under `${STORAGE_KEY}:unreadable`.
  */
 
+import { MAX_PUZZLE_SIZE } from './puzzleLimits';
+
 export const STORAGE_KEY = 'nonogram-studio';
 export const SCHEMA_VERSION = 2;
 
@@ -116,7 +118,7 @@ function cleanPuzzle(v: unknown): StoredPuzzle | null {
   const width = num(v.width, 0);
   const height = num(v.height, 0);
   if (typeof v.id !== 'string' || !v.id) return null;
-  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width > 40 || height > 40) return null;
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width > MAX_PUZZLE_SIZE || height > MAX_PUZZLE_SIZE) return null;
   if (!isValidSolution(v.solution, width, height)) return null;
   return {
     id: v.id,

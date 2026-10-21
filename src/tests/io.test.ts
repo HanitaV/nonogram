@@ -3,6 +3,8 @@ import { parsePuzzleFile, toPuzzleFile } from '../lib/puzzleIO';
 import { decodeShare, encodeShare } from '../lib/share';
 import { toLpFormat, ilpStats, startRange } from '../engine/ilp';
 import { cluesOf } from './helpers';
+import { MAX_PUZZLE_SIZE } from '../lib/puzzleLimits';
+import { defaultSave, migrate } from '../lib/storage';
 
 const sample = { name: 'Tiny ☕', width: 3, height: 2, solution: ['#.#', '###'] };
 
@@ -20,13 +22,30 @@ describe('import / export', () => {
     expect(parsePuzzleFile(JSON.stringify(wrongRow))).toMatchObject({ ok: false });
     const wrongClues = { ...toPuzzleFile(sample), rows: [[1], [3]] };
     expect(parsePuzzleFile(JSON.stringify(wrongClues))).toEqual({ ok: false, error: 'Chỉ dẫn trong tệp không khớp với đáp án.' });
-    const tooBig = { ...toPuzzleFile(sample), width: 99 };
+    const tooBig = { ...toPuzzleFile(sample), width: MAX_PUZZLE_SIZE + 1 };
     expect(parsePuzzleFile(JSON.stringify(tooBig)).ok).toBe(false);
   });
 
   it('accepts files without clues', () => {
     const { rows: _r, cols: _c, ...rest } = toPuzzleFile(sample);
     expect(parsePuzzleFile(JSON.stringify(rest)).ok).toBe(true);
+  });
+
+  it('preserves a detailed image puzzle through JSON, sharing and persistence', () => {
+    const width = MAX_PUZZLE_SIZE;
+    const height = 150;
+    const large = {
+      name: 'HAMIC', width, height,
+      solution: Array.from({ length: height }, (_, r) => Array.from({ length: width }, (_, c) => (r + c) % 3 === 0 ? '#' : '.').join('')),
+    };
+    expect(parsePuzzleFile(JSON.stringify(toPuzzleFile(large)))).toEqual({ ok: true, ...large });
+    expect(decodeShare(encodeShare(large))).toEqual(large);
+    const save = defaultSave();
+    save.puzzles.push({ ...large, id: 'hamic', source: 'custom', unique: null, createdAt: 1 });
+    expect(migrate(JSON.parse(JSON.stringify(save))).puzzles).toEqual(save.puzzles);
+    const invalid = { ...large, width: MAX_PUZZLE_SIZE + 1, solution: large.solution.map((row) => row + '.') };
+    expect(parsePuzzleFile(JSON.stringify({ format: 'nonogram-studio/puzzle', version: 1, ...invalid })).ok).toBe(false);
+    expect(decodeShare(encodeShare(invalid))).toBeNull();
   });
 });
 
