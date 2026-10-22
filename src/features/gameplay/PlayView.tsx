@@ -213,6 +213,7 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
         if (k === 'h') void hint();
         else if (k === 'c') void check();
         else if (k === 't') setTool((x) => (x === 'fill' ? 'mark' : 'fill'));
+        else if (k === 'e') setTool('erase');
       }
     };
     window.addEventListener('keydown', onKey);
@@ -243,6 +244,12 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
         <input type="radio" name={`tool-${group}`} checked={tool === 'mark'} onChange={() => setTool('mark')} disabled={finished} />
         <span>
           <X size={14} aria-hidden="true" /> Đánh dấu
+        </span>
+      </label>
+      <label title="Xóa ô đã tô và dấu X (E)">
+        <input type="radio" name={`tool-${group}`} checked={tool === 'erase'} onChange={() => setTool('erase')} disabled={finished} />
+        <span>
+          <Eraser size={14} aria-hidden="true" /> Tẩy
         </span>
       </label>
     </div>
@@ -324,7 +331,7 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
   );
 
   return (
-    <div className="play-workspace mx-auto w-full max-w-[1200px] px-4 pb-28 pt-5 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-x-8 lg:pb-12 lg:pt-8">
+    <div className="play-workspace mx-auto w-full max-w-[1200px] px-4 pb-36 pt-5 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-x-8 lg:pb-12 lg:pt-8">
       <section aria-labelledby="puzzle-title" className="puzzle-sheet min-w-0">
         <header className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
           <div>
@@ -388,9 +395,9 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
             {!finished && (
               <>
                 <span className="pointer-coarse:hidden">
-                  Nhấn để tô, nhấn chuột phải để đánh dấu trống, kéo để tô một hàng/cột. Nhấn lại ô đã tô để xóa. Bạn cũng có thể dùng phím mũi tên và Space.
+                  Nhấn để tô, nhấn chuột phải để đánh dấu trống, kéo để tô một hàng/cột. Chọn Tẩy (E) rồi nhấn hoặc kéo để xóa cả ô tô và dấu X. Bạn cũng có thể dùng phím mũi tên và Space.
                 </span>
-                <span className="hidden pointer-coarse:inline">Chạm hoặc kéo để tô. Chuyển giữa Tô ô và Đánh dấu bên dưới; chạm lại vào ô để xóa.</span>
+                <span className="hidden pointer-coarse:inline">Chạm hoặc kéo để tô. Chọn Tẩy bên dưới rồi chạm hoặc kéo để xóa cả ô tô và dấu X.</span>
               </>
             )}
           </p>
@@ -476,7 +483,7 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
         aria-label="Điều khiển trò chơi"
         className="mobile-tools fixed inset-x-0 bottom-0 z-20 border-t border-rule bg-paper px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 lg:hidden"
       >
-        <div className="mx-auto flex max-w-xl items-center justify-between gap-1">
+        <div className="mx-auto flex max-w-xl flex-wrap items-center justify-between gap-1">
           {finished ? (
             <button type="button" className="btn btn-ink" onClick={() => navigate({ view: 'play', id: nextId })}>
               Câu tiếp theo

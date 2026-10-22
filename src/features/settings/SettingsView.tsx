@@ -62,7 +62,6 @@ export function SettingsView() {
           <div className="space-y-2.5">
             <Toggle label="Giới hạn thao tác kéo trong một hàng hoặc cột" checked={s.axisLock} onChange={(v) => set('axisLock', v)} />
             <Toggle label="Làm nổi bật hàng và cột dưới con trỏ" checked={s.crosshair} onChange={(v) => set('crosshair', v)} />
-            <Toggle label="Đánh dấu trống các ô còn lại của hàng/cột đã hoàn thành" checked={s.autoCross} onChange={(v) => set('autoCross', v)} />
           </div>
         </Row>
         <Row title="Tiến độ đã lưu" help={`Bảng, thời gian và trạng thái giải của ${progressCount} câu đố. Các câu đố bạn tự vẽ được giữ lại.`}>

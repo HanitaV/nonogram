@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../../app/store';
-import { gridFromSolution, lineClue } from '../../engine/clues';
+import { gridFromSolution } from '../../engine/clues';
 import { diffBoards, emptyHistory, record, redo as redoH, undo as undoH, type CellChange, type History } from '../../engine/history';
-import { lineCells } from '../../engine/solver';
 import { checkBoard, isSolution } from '../../engine/validation';
 import { playSolved } from '../../lib/sound';
 import { decodeBoard, encodeBoard, type GameRecord, type GameStatus } from '../../lib/storage';
@@ -121,39 +120,16 @@ export function useGame(puzzle: Puzzle): Game {
     [puzzle, persist, save.games, settings.sound],
   );
 
-  /** Mark the rest of every completed line as empty (optional setting). */
-  const autoCross = useCallback(
-    (b: Uint8Array): Uint8Array => {
-      const out = b.slice();
-      for (let l = 0; l < puzzle.width + puzzle.height; l++) {
-        const cells = lineCells(puzzle, l);
-        const clue = l < puzzle.height ? puzzle.rows[l]! : puzzle.cols[l - puzzle.height]!;
-        const got = lineClue(cells.map((c) => out[c]!));
-        if (got.length === clue.length && got.every((v, i) => v === clue[i])) {
-          for (const c of cells) if (out[c] === UNKNOWN) out[c] = EMPTY;
-        }
-      }
-      return out;
-    },
-    [puzzle],
-  );
-
   const commit = useCallback(
     (next: Uint8Array, changes: CellChange[]) => {
       if (statusRef.current !== 'playing') return;
+      if (changes.length === 0) return;
       started.current = true;
-      let final = next;
-      let all = changes;
-      if (settings.autoCross) {
-        final = autoCross(next);
-        all = diffBoards(boardRef.current, final);
-      }
-      if (all.length === 0) return;
-      replaceBoard(final);
-      replaceHistory(record(historyRef.current, all));
-      if (!finishIfSolved(final)) persist({ board: encodeBoard(final), elapsedMs: elapsedRef.current });
+      replaceBoard(next);
+      replaceHistory(record(historyRef.current, changes));
+      if (!finishIfSolved(next)) persist({ board: encodeBoard(next), elapsedMs: elapsedRef.current });
     },
-    [settings.autoCross, autoCross, finishIfSolved, persist, replaceBoard, replaceHistory],
+    [finishIfSolved, persist, replaceBoard, replaceHistory],
   );
 
   const stroke = useCallback(

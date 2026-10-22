@@ -32,8 +32,6 @@ export interface Settings {
   theme: ThemeSetting;
   sound: boolean;
   motion: MotionSetting;
-  /** Mark remaining cells of a finished line as empty automatically. */
-  autoCross: boolean;
   /** Highlight the row and column under the cursor. */
   crosshair: boolean;
   /** Lock a drag to the row or column it starts moving along. */
@@ -63,7 +61,6 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
   sound: false,
   motion: 'system',
-  autoCross: false,
   crosshair: true,
   axisLock: true,
 };
@@ -99,7 +96,6 @@ function cleanSettings(v: unknown): Settings {
     theme: oneOf(s.theme, ['system', 'light', 'dark'] as const, DEFAULT_SETTINGS.theme),
     sound: bool(s.sound, DEFAULT_SETTINGS.sound),
     motion: oneOf(s.motion, ['system', 'reduce', 'full'] as const, DEFAULT_SETTINGS.motion),
-    autoCross: bool(s.autoCross, DEFAULT_SETTINGS.autoCross),
     crosshair: bool(s.crosshair, DEFAULT_SETTINGS.crosshair),
     axisLock: bool(s.axisLock, DEFAULT_SETTINGS.axisLock),
   };

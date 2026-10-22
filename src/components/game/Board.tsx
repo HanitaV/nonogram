@@ -5,7 +5,7 @@ import type { LineStatus } from '../../engine/validation';
 import { EMPTY, FILLED, UNKNOWN, type Axis, type Clues } from '../../types/puzzle';
 
 export type CellTag = 'hint' | 'mistake' | 'branch' | 'forced' | 'diff';
-export type Tool = 'fill' | 'mark';
+export type Tool = 'fill' | 'mark' | 'erase';
 
 export interface BoardProps {
   clues: Clues;
@@ -40,6 +40,7 @@ interface Stroke {
   pointerId: number;
   from: number;
   to: number;
+  erase: boolean;
   start: { r: number; c: number };
   last: { r: number; c: number };
   axis: 'row' | 'col' | null;
@@ -48,6 +49,7 @@ interface Stroke {
 
 function nextValue(mode: BoardProps['mode'], current: number, tool: Tool): number {
   if (mode === 'draw') return current === FILLED ? UNKNOWN : FILLED;
+  if (tool === 'erase') return UNKNOWN;
   const v = tool === 'mark' ? EMPTY : FILLED;
   return current === v ? UNKNOWN : v;
 }
@@ -178,9 +180,9 @@ export function Board(props: BoardProps) {
         const cc = Math.round(s.last.c + ((c - s.last.c) * i) / steps);
         const idx = rr * W + cc;
         if (s.changes.has(idx)) continue;
-        // Only cells in the same state as the starting cell change: a drag that
-        // fills never overwrites marks, and a drag that clears only clears.
-        if (next[idx] !== s.from) continue;
+        // The eraser clears both fills and marks in one stroke. Other tools
+        // only change cells in the same state as the starting cell.
+        if (s.erase ? next[idx] === UNKNOWN : next[idx] !== s.from) continue;
         s.changes.set(idx, { index: idx, from: next[idx]!, to: s.to });
         next[idx] = s.to;
         painted = true;
@@ -208,6 +210,7 @@ export function Board(props: BoardProps) {
       pointerId: e.pointerId,
       from: current,
       to,
+      erase: mode === 'play' && t === 'erase',
       start: at,
       last: at,
       axis: null,
@@ -282,7 +285,8 @@ export function Board(props: BoardProps) {
     if (mode === 'view' || !onStroke) return;
     const idx = cur.r * W + cur.c;
     let to: number | null = null;
-    if (e.key === ' ' || e.key === 'Enter' || e.key.toLowerCase() === 'f') to = nextValue(mode, board[idx]!, 'fill');
+    if (e.key === ' ' || e.key === 'Enter') to = nextValue(mode, board[idx]!, tool);
+    else if (e.key.toLowerCase() === 'f') to = nextValue(mode, board[idx]!, 'fill');
     else if ((e.key.toLowerCase() === 'x' || e.key === '.') && mode === 'play') to = nextValue(mode, board[idx]!, 'mark');
     else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') to = UNKNOWN;
     if (to === null) return;
@@ -413,7 +417,7 @@ export function Board(props: BoardProps) {
       </div>
       {mode !== 'view' && (
         <p id="board-keys" className="sr-only">
-          Phím mũi tên để di chuyển. Space để tô{mode === 'play' ? ', X để đánh dấu trống' : ''}, Delete để xóa. Giữ Shift và phím mũi tên để lặp lại thao tác trước.
+          Phím mũi tên để di chuyển. Space để dùng công cụ đang chọn{mode === 'play' ? ', X để đánh dấu trống' : ''}, Delete để xóa. Giữ Shift và phím mũi tên để lặp lại thao tác trước.
         </p>
       )}
       <div className="sr-only" aria-live="polite">
