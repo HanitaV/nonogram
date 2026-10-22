@@ -7,7 +7,7 @@ import { Menu } from '../../components/ui/Menu';
 import { LIBRARY } from '../../data/puzzles';
 import { formatClue } from '../../engine/clues';
 import type { Hint } from '../../engine/hints';
-import { mistakesAgainst } from '../../engine/validation';
+import { contradictoryCells, mistakesAgainst } from '../../engine/validation';
 import { difficultyLabel, formatTime, plural } from '../../lib/format';
 import { addPuzzle, nextLibraryPuzzle, randomLibraryPuzzle, storedFromGrid } from '../../lib/library';
 import { puzzleLabel, resolvePuzzle } from '../../lib/puzzles';
@@ -63,7 +63,7 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
   const finished = solved || revealed;
   const showName = finished || puzzle.source === 'custom';
   const uniqueRef = useMemo(() => puzzle.unique ? solutionGrid(puzzle) : null, [puzzle]);
-  const mistakes = useMemo(() => uniqueRef && !finished ? mistakesAgainst(game.board, uniqueRef) : [], [game.board, uniqueRef, finished]);
+  const mistakes = useMemo(() => finished ? [] : contradictoryCells(puzzle, game.board, game.check), [puzzle, game.board, game.check, finished]);
   const boardTags = useMemo(() => {
     const tags = new Map(note?.tags);
     mistakes.forEach((index) => tags.set(index, 'mistake'));
@@ -372,15 +372,13 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
         {!finished && (
           <div className={`mistake-report ${mistakes.length ? 'has-mistakes' : ''}`} role="status" aria-live="polite" aria-atomic="true">
             <div className="flex items-center justify-between gap-3">
-              <strong>{mistakes.length ? `${mistakes.length} ô đang sai` : 'Báo cáo ô sai'}</strong>
-              <span className="text-xs">{uniqueRef ? 'Kiểm tra tức thì' : 'Theo chỉ dẫn'}</span>
+              <strong>{mistakes.length ? 'Có hàng hoặc cột vi phạm quy tắc' : 'Kiểm tra quy tắc'}</strong>
+              <span className="text-xs">Theo chỉ dẫn</span>
             </div>
             <p className="mt-1 text-sm">
               {mistakes.length
-                ? `${mistakes.slice(0, 4).map((index) => cellName(puzzle, index)).join('; ')}${mistakes.length > 4 ? `; và ${mistakes.length - 4} ô khác` : ''}. Nhấn lại để xóa hoặc hoàn tác.`
-                : uniqueRef ? 'Chưa phát hiện ô sai. Các ô sai sẽ được đánh dấu đỏ ngay khi bạn bấm.'
-                : game.check.state === 'contradiction' ? 'Có hàng hoặc cột mâu thuẫn. Nhấn Kiểm tra để xem chi tiết.'
-                : 'Câu đố chưa xác nhận nghiệm duy nhất. Dùng Kiểm tra để kiểm tra các bước đã đi.'}
+                ? `Các ô đã chọn trong hàng/cột mâu thuẫn được đánh dấu đỏ: ${mistakes.slice(0, 4).map((index) => cellName(puzzle, index)).join('; ')}${mistakes.length > 4 ? `; và ${mistakes.length - 4} ô khác` : ''}. Hãy sửa các ô trong hàng/cột đó hoặc hoàn tác.`
+                : 'Chưa có hàng hoặc cột vi phạm quy tắc. Chỉ báo đỏ khi không còn cách xếp hợp lệ theo chỉ dẫn. Dùng Kiểm tra để kiểm tra toàn bảng.'}
             </p>
           </div>
         )}

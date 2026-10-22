@@ -58,6 +58,18 @@ export function checkBoard(clues: Clues, board: Grid): BoardCheck {
   return { state, rows, cols, filled, target };
 }
 
+/** Known cells involved in a row/column contradiction, without consulting an answer.
+ * These cells conflict as a group; an individual cell is not necessarily wrong.
+ */
+export function contradictoryCells(clues: Clues, board: Grid, check = checkBoard(clues, board)): number[] {
+  const cells: number[] = [];
+  for (let i = 0; i < board.length; i++) {
+    if (board[i] === UNKNOWN) continue;
+    if (check.rows[Math.floor(i / clues.width)]!.impossible || check.cols[i % clues.width]!.impossible) cells.push(i);
+  }
+  return cells;
+}
+
 /** True if `grid` (FILLED = black, anything else = white) satisfies all clues. */
 export function isSolution(clues: Clues, grid: Grid): boolean {
   for (let l = 0; l < clues.width + clues.height; l++) {
