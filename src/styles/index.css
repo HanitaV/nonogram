@@ -434,49 +434,107 @@ html.theme-anim * {
   white-space: nowrap;
 }
 
-/* Framed-sheet: a quiet green-grey frame around the pixel-puzzle work surface.
-   Desktop: 1152px = 848px work + 32px gutter + 272px tools. */
+/* HAMIC theme: navy blue and signal red, taken from the logo.
+   Blue is the working colour (ink, fills, focus); red is for mistakes and accents. */
 :root {
-  --paper: #eef3f1;
+  --paper: #eef2fb;
   --sheet: #ffffff;
-  --ink: #192e2b;
-  --pencil: #576b66;
-  --rule: #dce5e1;
-  --rule-strong: #9db2aa;
-  --fill: #264e45;
-  --mark: #80978e;
-  --highlight: #297c72;
-  --highlight-soft: rgb(41 124 114 / 0.10);
-  --redpen: #bb3343;
-  --redpen-soft: #fff0f1;
-  --solved: #287968;
-  --shade: rgb(38 78 69 / 0.055);
+  --ink: #13244a;
+  --pencil: #56658a;
+  --rule: #d6dff1;
+  --rule-strong: #8fa0c8;
+  --fill: #1b3566;
+  --mark: #7a8cb6;
+  --highlight: #2f5bd1;
+  --highlight-soft: rgb(47 91 209 / 0.11);
+  --redpen: #e31e24;
+  --redpen-soft: #fff0f0;
+  --solved: #1f4fb5;
+  --shade: rgb(27 53 102 / 0.06);
+  --brand-navy: #14284f;
+  --brand-blue: #1f4fb5;
+  --brand-red: #e31e24;
 }
 [data-theme='dark'] {
-  --paper: #181b1a;
-  --sheet: #212624;
-  --ink: #edf2ef;
-  --pencil: #a6b8b0;
-  --rule: #35413b;
-  --rule-strong: #657e71;
-  --fill: #a6c7b9;
-  --mark: #879d92;
-  --highlight: #81bfae;
-  --highlight-soft: rgb(129 191 174 / 0.12);
-  --redpen: #f58d99;
-  --redpen-soft: #3a2429;
-  --solved: #91c9b5;
-  --shade: rgb(255 255 255 / 0.045);
+  --paper: #0c1325;
+  --sheet: #131c35;
+  --ink: #eaf0ff;
+  --pencil: #9fb0d6;
+  --rule: #25325a;
+  --rule-strong: #4d629a;
+  --fill: #8fb0ff;
+  --mark: #6f84b8;
+  --highlight: #6c95ff;
+  --highlight-soft: rgb(108 149 255 / 0.14);
+  --redpen: #ff6b72;
+  --redpen-soft: #3a1b26;
+  --solved: #8fb0ff;
+  --shade: rgb(255 255 255 / 0.05);
 }
-body > #root > header { border: 0; }
-body > #root > header > div { height: 72px; }
-body > #root > header svg { color: var(--highlight); }
+body {
+  background:
+    radial-gradient(900px 400px at 100% 0, rgb(227 30 36 / 0.07), transparent 70%),
+    radial-gradient(900px 500px at 0 0, rgb(31 79 181 / 0.10), transparent 70%),
+    var(--paper);
+  background-attachment: fixed;
+}
+.site-header {
+  background: linear-gradient(100deg, var(--brand-navy) 0%, #1b3b80 62%, #2a4fa8 100%);
+  color: #fff;
+  position: relative;
+  box-shadow: 0 6px 20px -10px rgb(20 40 79 / 0.6);
+}
+.site-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand-red), #ff5a5f 40%, var(--brand-red) 70%, transparent);
+  background-size: 200% 100%;
+  animation: stripe 6s linear infinite;
+}
+.site-header > div { height: 68px; }
+.brand-logo {
+  width: 46px;
+  height: 46px;
+  padding: 3px;
+  border-radius: 50%;
+  background: #fff;
+  object-fit: contain;
+  box-shadow: 0 0 0 2px rgb(227 30 36 / 0.85), 0 4px 12px rgb(0 0 0 / 0.3);
+  transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 300ms;
+}
+.brand:hover .brand-logo {
+  transform: rotate(-8deg) scale(1.1);
+  box-shadow: 0 0 0 2px #ff5a5f, 0 0 18px rgb(255 90 95 / 0.6);
+}
+.site-header .nav-link {
+  color: rgb(255 255 255 / 0.72);
+  transition: color 150ms;
+}
+.site-header .nav-link:hover,
+.site-header .nav-link[aria-current='page'] { color: #fff; }
+.site-header .nav-link[aria-current='page']::after { background: var(--brand-red); height: 3px; border-radius: 2px; bottom: 4px; }
+.site-header .btn { color: #fff; }
+.site-header .btn:hover:not(:disabled) { background: rgb(255 255 255 / 0.14); }
+.site-header :focus-visible { outline-color: #fff; }
+@keyframes stripe { to { background-position: -200% 0; } }
+
+main { animation: rise 380ms ease-out both; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+@keyframes pop { 0% { transform: scale(0.4); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes glow { 0%, 100% { box-shadow: 0 0 0 0 rgb(227 30 36 / 0); } 50% { box-shadow: 0 0 28px 4px rgb(47 91 209 / 0.45); } }
+@keyframes shine { to { background-position: 200% 0; } }
+
 body > #root > main {
   margin: 0 12px 12px;
   min-height: calc(100dvh - 84px);
   background: var(--sheet);
   border: 1px solid var(--rule);
   border-radius: 16px;
+  box-shadow: 0 10px 30px -18px rgb(20 40 79 / 0.35);
 }
 h1 { letter-spacing: -0.025em; }
 .btn { min-height: 40px; border-radius: 6px; transition: background-color 120ms ease, transform 120ms ease; }
@@ -517,7 +575,8 @@ h1 { letter-spacing: -0.025em; }
   .play-workspace { max-width: 800px; }
 }
 @media (max-width: 600px) {
-  body > #root > header > div { height: 56px; }
+  .site-header > div { height: 56px; }
+  .brand-logo { width: 38px; height: 38px; }
   body > #root > main { margin: 0; border: 0; border-radius: 0; min-height: calc(100dvh - 56px); }
   .puzzle-sheet h1 { font-size: 24px; }
   .puzzle-sheet > header { padding-bottom: 8px; }
@@ -526,3 +585,19 @@ h1 { letter-spacing: -0.025em; }
   .mobile-tools .seg span { padding-inline: 8px; }
   .mobile-tools .btn { min-height: 44px; }
 }
+
+/* Effects */
+.btn-ink {
+  background: linear-gradient(135deg, var(--brand-blue), var(--brand-navy));
+  color: #fff;
+  box-shadow: 0 4px 12px -4px rgb(31 79 181 / 0.6);
+}
+.btn-ink:hover:not(:disabled) { background: linear-gradient(135deg, #2a63d8, var(--brand-navy)); opacity: 1; transform: translateY(-1px); }
+.cell.f::after { animation: pop 160ms ease-out; }
+.cell.x::before, .cell.x::after { animation: pop 160ms ease-out; }
+.cell.cursor { outline-color: var(--brand-red); }
+.solved.cells { animation: glow 1.8s ease-in-out 2; }
+.solved .cell.f::after { background: linear-gradient(135deg, var(--brand-blue), var(--brand-red)); background-size: 300% 300%; }
+[data-theme='dark'] .solved .cell.f::after { background: linear-gradient(135deg, #8fb0ff, #ff6b72); }
+.game-rail .bg-solved, .bg-solved { background: linear-gradient(90deg, var(--brand-blue), var(--brand-red)); }
+.confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }

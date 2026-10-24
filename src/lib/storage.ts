@@ -59,7 +59,7 @@ export interface SaveData {
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
-  sound: false,
+  sound: true,
   motion: 'system',
   crosshair: true,
   axisLock: true,

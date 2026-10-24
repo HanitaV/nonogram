@@ -57,7 +57,7 @@ describe('persistence', () => {
     expect(Object.keys(m.games)).toEqual(['good']);
     expect(m.currentId).toBeNull();
     expect(m.settings.theme).toBe('system');
-    expect(m.settings.sound).toBe(false);
+    expect(m.settings.sound).toBe(true);
     expect(m.settings.axisLock).toBe(false);
     expect(m.puzzles.map((p) => p.id)).toEqual(['q']);
   });

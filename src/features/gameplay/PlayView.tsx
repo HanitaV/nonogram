@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { navigate } from '../../app/router';
 import { useStore } from '../../app/store';
 import { Board, type CellTag, type Tool } from '../../components/game/Board';
+import { Confetti } from '../../components/game/Confetti';
 import { Menu } from '../../components/ui/Menu';
 import { LIBRARY } from '../../data/puzzles';
 import { formatClue } from '../../engine/clues';
@@ -61,6 +62,13 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
   const solved = game.status === 'solved';
   const revealed = game.status === 'revealed';
   const finished = solved || revealed;
+  // Confetti only on the moment of solving, not when reopening a solved puzzle.
+  const wasSolved = useRef(solved);
+  const [burst, setBurst] = useState(false);
+  useEffect(() => {
+    if (solved && !wasSolved.current) setBurst(true);
+    wasSolved.current = solved;
+  }, [solved]);
   const showName = finished || puzzle.source === 'custom';
   const uniqueRef = useMemo(() => puzzle.unique ? solutionGrid(puzzle) : null, [puzzle]);
   const mistakes = useMemo(() => finished ? [] : contradictoryCells(puzzle, game.board, game.check), [puzzle, game.board, game.check, finished]);
@@ -332,6 +340,7 @@ function PlaySession({ puzzle }: { puzzle: Puzzle }) {
 
   return (
     <div className="play-workspace mx-auto w-full max-w-[1200px] px-4 pb-36 pt-5 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-x-8 lg:pb-12 lg:pt-8">
+      {burst && <Confetti />}
       <section aria-labelledby="puzzle-title" className="puzzle-sheet min-w-0">
         <header className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
           <div>

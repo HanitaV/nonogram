@@ -3,6 +3,7 @@ import { Header } from '../components/layout/Header';
 import { CreatorView } from '../features/creator/CreatorView';
 import { PlayView } from '../features/gameplay/PlayView';
 import { LibraryView } from '../features/library/LibraryView';
+import { setSoundEnabled } from '../lib/sound';
 import { SettingsView } from '../features/settings/SettingsView';
 import { SharedView } from '../features/gameplay/SharedView';
 import { SolverView } from '../features/solver/SolverView';
@@ -23,7 +24,8 @@ const titles: Record<string, string> = {
 
 function useAppearance() {
   const { save } = useStore();
-  const { theme, motion } = save.settings;
+  const { theme, motion, sound } = save.settings;
+  useEffect(() => setSoundEnabled(sound), [sound]);
   useEffect(() => {
     const mq = matchMedia('(prefers-color-scheme: dark)');
     const apply = () => {
